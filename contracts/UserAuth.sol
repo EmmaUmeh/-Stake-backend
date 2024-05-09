@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.19;
 
-contract UserRegistration {
+contract UserAuth {
     uint public userCount = 0;
 
     // Corrected mapping name to match usage

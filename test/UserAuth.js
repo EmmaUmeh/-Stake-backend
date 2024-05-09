@@ -56,7 +56,7 @@ describe("Registration", function () {
 
   beforeEach(async function () {
     // Get the ContractFactory and Signers here.
-    UserRegistration = await ethers.getContractFactory("UsgerAuth");
+    UserRegistration = await ethers.getContractFactory("UserAuth");
     [owner, addr1, addr2, _] = await ethers.getSigners();
 
     // Deploy the contract

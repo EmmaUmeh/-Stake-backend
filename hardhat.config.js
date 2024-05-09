@@ -21,12 +21,11 @@ require("solidity-coverage")
 const COINMARKETCAP_API_KEY = process.env.COINMARKETCAP_API_KEY || ""
 
 const TESTNET_RPC_URL =
-
     process.env.TESTNET_RPC_URL ||
     "https://eth-mainnet.g.alchemy.com/v2/igeZ4fwedy10wX6CTzGVcN3yED2c02zc"
 const PRIVATE_KEY =
     process.env.PRIVATE_KEY ||
-    "0x942bc458dbae515f2e9324a5e132835dc15d7f6a8710583c98a2e3c7d078199b"
+    "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
 
 const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY || ""
 
@@ -37,17 +36,17 @@ module.exports = {
             chainId: 31337,
             // gasPrice: 130000000000,
         },
-        sepolia: {
+        ethereum: {
             url: TESTNET_RPC_URL,
             accounts: [PRIVATE_KEY],
-            chainId: 11155111,
-            blockConfirmations: 6,
+            chainId: 1,
+            // blockConfirmations: 6,
         },
     },
     solidity: {
         compilers: [
             {
-                version: "0.8.20",
+                version: "0.8.19",
             },
         ],
     },
