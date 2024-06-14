@@ -4,58 +4,45 @@ pragma solidity ^0.8.19;
 contract UserAuth {
     uint public userCount = 0;
 
-    // Corrected mapping name to match usage
-    mapping(string => userModels) public user_models;
-
-    struct userModels {
-        string userName; // Corrected field name to match assignment
-        string email; // Corrected field name to match assignment
-        string password; // Corrected field name to match assignment
+    struct userModel {
+        string userName;
+        address userAddress;
     }
 
+    mapping(address => userModel) public userModels;
+    mapping(address => bool) private userExists;
+
+    address[] private userAddresses;
+
     event userCreated(
-        string username, // Corrected parameter name to match emitted values
-        string email, // Corrected parameter name to match emitted values
-        string password // Corrected parameter name to match emitted values
+        string userName,
+        address userAddress
     );
 
-    
-    event userLoggedIn(
-        string email,
-        bool success
-    );
+    // Register a new user with their MetaMask address
+    function registerUser(string memory userName) public {
+        // Check if the user already exists
+        require(!userExists[msg.sender], "User already exists");
 
-mapping(string => bool) private userExists;
+        userExists[msg.sender] = true;
+        userCount++;
+        
+        // Assign the new user model to the mapping using the user's address as the key
+        userModels[msg.sender] = userModel(userName, msg.sender);
 
-function RegisterUser(string memory userName, string memory email, string memory password) public {
-    // Check if the user already exists
-    require(!userExists[email], "User already exists");
+        // Add the user's address to the userAddresses array
+        userAddresses.push(msg.sender);
 
-    userExists[email] = true;
-    userCount++;
-    // Assign the new user model to the mapping using the email as the key
-    user_models[email] = userModels(userName, email, password);
-    emit userCreated(userName, email, password);
-}
+        emit userCreated(userName, msg.sender);
+    }
 
-
-
-
-function Login(string memory email, string memory password) public {
-    // Hash the email to get a bytes32 value
-    bytes32 hashedEmail = keccak256(abi.encodePacked(email));
-
-    // Convert the hashed email back to a string for comparison
-    string memory emailHashString = string(abi.encodePacked(hashedEmail));
-
-    // Check if the user exists by comparing the hashed email
-    require(!userExists[emailHashString], "User doesn't exist");
-    
-    require(keccak256(abi.encodePacked(password)) == keccak256(abi.encodePacked(user_models[emailHashString].password)), "Incorrect password");
-
-    // Emit the event indicating successful login
-    emit userLoggedIn(email, true);
-}
-
-    
+    // Function to get all registered users
+    function getAllUsers() public view returns (userModel[] memory) {
+        userModel[] memory users = new userModel[](userCount);
+        for (uint i = 0; i < userCount; i++) {
+            address userAddress = userAddresses[i];
+            users[i] = userModels[userAddress];
+        }
+        return users;
+    }
 }

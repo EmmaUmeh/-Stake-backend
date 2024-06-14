@@ -12,20 +12,15 @@ require("@nomiclabs/hardhat-etherscan")
 require("dotenv").config()
 require("solidity-coverage")
 // require("hardhat-deploy")
-// You need to export an object to set up your config
-// Go to https://hardhat.org/config/ to learn more
-/**
- * @type import('hardhat/config').HardhatUserConfig
- */
+
 
 const COINMARKETCAP_API_KEY = process.env.COINMARKETCAP_API_KEY || ""
 
 const TESTNET_RPC_URL =
     process.env.TESTNET_RPC_URL ||
     "https://eth-mainnet.g.alchemy.com/v2/igeZ4fwedy10wX6CTzGVcN3yED2c02zc"
-const PRIVATE_KEY =
-    process.env.PRIVATE_KEY ||
-    "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
+
+    const PRIVATE_KEY = process.env.PRIVATE_KEY
 
 const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY || ""
 
@@ -33,7 +28,7 @@ module.exports = {
     defaultNetwork: "hardhat",
     networks: {
         hardhat: {
-            chainId: 31337,
+            chainId: 1,
             // gasPrice: 130000000000,
         },
         ethereum: {
@@ -42,6 +37,10 @@ module.exports = {
             chainId: 1,
             // blockConfirmations: 6,
         },
+        localhost: {
+            url: "http://127.0.0.1:8545/",
+            chainId: 31337,
+        }
     },
     solidity: {
         compilers: [
