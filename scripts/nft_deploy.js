@@ -1,76 +1,73 @@
 const { ethers } = require("hardhat");
 
 async function main() {
-    const [deployer] = await ethers.getSigners();
+  const [deployer] = await ethers.getSigners();
 
-    console.log("Deploying contracts with the account:", deployer.address);
+  console.log("Deploying contracts with the account:", deployer.address);
+  console.log("Account balance:", (await deployer.getBalance()).toString());
 
-    // Deploy Nft contract
-    const Nft = await ethers.getContractFactory("Nft");
-    const nftContract = await Nft.deploy();
-    await nftContract.deployed();
+  // Get the contract factory for Nft
+  const Nft = await ethers.getContractFactory("Nft");
 
-    console.log("Nft contract deployed to:", nftContract.address);
+  // Deploy the contract
+  const nft = await Nft.deploy(deployer.address); // Pass deployer's address as initialOwner
+  await nft.deployed();
 
-    // Mint test NFTs
-    console.log("Minting test NFTs...");
+  console.log("Nft contract deployed to:", nft.address);
 
-    const testNfts = [
-        {
-            nftProductImage: "https://example.com/nft-image-1.png",
-            userName: "Alice",
-            buyerAddress: deployer.address,
-            sellerAddress: ethers.constants.AddressZero // Placeholder for seller address
-        },
-        {
-            nftProductImage: "https://example.com/nft-image-2.png",
-            userName: "Bob",
-            buyerAddress: deployer.address,
-            sellerAddress: ethers.constants.AddressZero // Placeholder for seller address
-        }
-        // Add more test NFTs as needed
-    ];
-
-    for (const nft of testNfts) {
-        await nftContract.mint(
-            nft.nftProductImage,
-            nft.userName,
-            nft.buyerAddress,
-            nft.sellerAddress
-        );
-        console.log(`NFT minted for user ${nft.userName}`);
+  // Mint test NFTs
+  const testNfts = [
+    {
+      nftProductImage: "https://example.com/image1.png",
+      userName: "Alice",
+      price: ethers.utils.parseEther('1.0')  // Price in ether
+    },
+    {
+      nftProductImage: "https://example.com/image2.png",
+      userName: "Bob",
+      price: ethers.utils.parseEther('0.5')  // Price in ether
+    },
+    {
+      nftProductImage: "https://example.com/image3.png",
+      userName: "Charlie",
+      price: ethers.utils.parseEther('2.0')  // Price in ether
     }
+  ];
 
-    // Retrieve NFT details
-    console.log("Fetching NFT details...");
+  // Mint all test NFTs
+  for (const nftData of testNfts) {
+    const createTx = await nft.connect(deployer).createNft(
+      nftData.nftProductImage,
+      nftData.userName,
+      nftData.price
+    );
+    await createTx.wait();
+    console.log(`Created NFT for ${nftData.userName}`);
+  }
 
-    for (let i = 0; i < testNfts.length; i++) {
-        const tokenId = i;
-        const nftDetails = await nftContract.getNftDetails(tokenId);
-        console.log(`NFT ID: ${tokenId}`);
-        console.log(`NFT Owner: ${nftDetails.buyerAddress}`);
-        console.log(`NFT Image URL: ${nftDetails.nftProductImage}`);
-        console.log("-----");
-    }
+  // Get total number of NFTs minted
+  const totalNfts = await nft.totalNfts();
+  console.log("Total NFTs minted:", totalNfts.toNumber());
 
-    // Optional: Fetch all NFT details
-    // const totalSupply = await nftContract.totalSupply();
-    // for (let i = 0; i < totalSupply; i++) {
-    //     const nftDetails = await nftContract.getNftDetails(i);
-    //     console.log(`NFT ID: ${i}`);
-    //     console.log(`NFT Owner: ${nftDetails.buyerAddress}`);
-    //     console.log(`NFT Image URL: ${nftDetails.nftProductImage}`);
-    //     console.log("-----");
-    // }
+  // Get details of the first minted NFT (optional)
+  const firstNftId = 0;
+  const firstNftDetails = await nft.getNftDetails(firstNftId);
+  console.log(`Details of NFT with ID ${firstNftId}:`, firstNftDetails);
 
-    // Optionally interact with other functions of the Nft contract here
+  // Test buying the first NFT
+  console.log(`Buying NFT with ID ${firstNftId}...`);
+  const buyTx = await nft.connect(deployer).buyNft(firstNftId, { value: firstNftDetails.price });
+  await buyTx.wait();
+  console.log(`Successfully bought NFT with ID ${firstNftId}`);
 
-    console.log("Deployment and interaction completed.");
+  // Get updated details after buying (optional)
+  const updatedNftDetails = await nft.getNftDetails(firstNftId);
+  console.log(`Updated details of NFT with ID ${firstNftId}:`, updatedNftDetails);
 }
 
 main()
-    .then(() => process.exit(0))
-    .catch((error) => {
-        console.error(error);
-        process.exit(1);
-    });
+  .then(() => process.exit(0))
+  .catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });

@@ -8,51 +8,87 @@ contract Nft is ERC721, Ownable {
     struct NftModel {
         string nftProductImage;
         string userName;
-        address buyerAddress;
         address sellerAddress;
+        uint256 price;
     }
 
     mapping(uint256 => NftModel) public nftModels;
     uint256 public nextTokenId;
 
-    constructor() ERC721("MyNFT", "MNFT") {}
+    // Update the constructor to accept an initial owner address
+    constructor(address initialOwner) ERC721("NFTLIST", "NFL") Ownable(initialOwner) {}
 
-    // Function to mint a new NFT
-    function mint(
+    // Function to create an NFT
+    function createNft(
         string memory _nftProductImage,
         string memory _userName,
-        address _buyerAddress,
-        address _sellerAddress
-    ) public onlyOwner {
+        uint256 _price
+    ) external {
         uint256 tokenId = nextTokenId;
-        _safeMint(_buyerAddress, tokenId);
+        _safeMint(msg.sender, tokenId);
 
         nftModels[tokenId] = NftModel({
             nftProductImage: _nftProductImage,
             userName: _userName,
-            buyerAddress: _buyerAddress,
-            sellerAddress: _sellerAddress
+            sellerAddress: msg.sender,
+            price: _price
         });
 
         nextTokenId++;
     }
 
-    // Function to transfer an NFT
-    function transferNft(
-        address _from,
-        address _to,
-        uint256 _tokenId
-    ) public {
-        require(ownerOf(_tokenId) == _from, "You are not the owner");
-        require(_from == msg.sender, "You can only transfer your own NFT");
 
-        _transfer(_from, _to, _tokenId);
+ function editNft(
+        uint256 _tokenId,
+        string memory _nftProductImage,
+        string memory _userName,
+        uint256 _price
+    ) external {
+        require(ownerOf(_tokenId) == msg.sender, "You are not the owner of this NFT");
 
-        nftModels[_tokenId].buyerAddress = _to;
+        NftModel storage nft = nftModels[_tokenId];
+        nft.nftProductImage = _nftProductImage;
+        nft.userName = _userName;
+        nft.price = _price;
+    }
+
+    // Function to delete an existing NFT
+    function deleteNft(uint256 _tokenId) external {
+        require(ownerOf(_tokenId) == msg.sender, "You are not the owner of this NFT");
+
+        _burn(_tokenId);
+        delete nftModels[_tokenId];
+    }
+
+    // Function to get total number of NFTs minted
+    function totalNfts() external view returns (uint256) {
+        return nextTokenId;
     }
 
     // Function to get NFT details by tokenId
-    function getNftDetails(uint256 _tokenId) public view returns (NftModel memory) {
+    function getNftDetails(uint256 _tokenId) external view returns (NftModel memory) {
         return nftModels[_tokenId];
     }
+
+    // Function to buy an NFT
+    function buyNft(uint256 _tokenId) external payable {
+        NftModel storage nft = nftModels[_tokenId];
+        
+        require(ownerOf(_tokenId) == nft.sellerAddress, "NFT not owned by seller");
+        require(msg.value >= nft.price, "Insufficient funds");
+
+        // Transfer ownership of the NFT
+        _transfer(nft.sellerAddress, msg.sender, _tokenId);
+
+        // Transfer payment to the seller
+        payable(nft.sellerAddress).transfer(msg.value);
+    }
+
+    // Function to sell an NFT
+    function sellNft(uint256 _tokenId, uint256 _price) external {
+        require(ownerOf(_tokenId) == msg.sender, "You are not the owner of this NFT");
+
+        nftModels[_tokenId].price = _price;
+    }
 }
+
